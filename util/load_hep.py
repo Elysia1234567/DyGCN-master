@@ -163,13 +163,13 @@ class Loader(object):
         batchid = 0
         t = 0
         edges = []
-        # if mode == "Train":
+        if mode == "Train":
         # edges_none = [e for e in dataset.edges() if
         #               'valid' in dataset[e[0]][e[1]] and dataset[e[0]][e[1]]['valid'] is None]
-        edges = [e for e in dataset.edges() if not dataset[e[0]][e[1]]['valid']]
+            edges = [e for e in dataset.edges() if not dataset[e[0]][e[1]]['valid']]
 
-        # elif mode == "Valid":
-        #     edges = [e for e in dataset.edges() if dataset[e[0]][e[1]]['valid']]
+        elif mode == "Valid":
+            edges = [e for e in dataset.edges() if dataset[e[0]][e[1]]['valid']]
 
         edges = [e for e in dataset.edges()]
 

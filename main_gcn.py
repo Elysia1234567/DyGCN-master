@@ -138,6 +138,7 @@ def run(session, config, model, loader, verbose=False):
 def main(_):
 
     loader = Loader(flag="as")
+
     config = Config(loader, flag="as")
 
     if platform.system() == 'Linux':
