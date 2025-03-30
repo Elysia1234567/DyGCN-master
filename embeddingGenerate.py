@@ -22,8 +22,8 @@ def get_randomwalk(G, node, path_length):
 
 
 # 基础路径
-path_init_file = 'D:/论文/DyGCN Code/DyGCN-master/data/data_hep/'
-embedding_path = 'D:/论文/DyGCN Code/DyGCN-master/data/data_hep_emb/'
+path_init_file = 'D:/lunwen/DyGCN Code/DyGCN-master/data/data_hep/'
+embedding_path = 'D:/lunwen/DyGCN Code/DyGCN-master/data/data_hep_emb/'
 
 gamma = 10
 walk_length = 5
