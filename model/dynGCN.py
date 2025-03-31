@@ -24,7 +24,7 @@ class DynGCN(object):
             self.is_training = False
             self.batch_size = self.config.test_batch_size
             reuse = True
-
+        # 初始化模型参数
         self.hidden_size = hidden_size = config.hidden_size
         self.learning_rate = learning_rate = config.learning_rate
         opt = config.sgd_opt
@@ -42,6 +42,7 @@ class DynGCN(object):
 
 
         # #------------feed-----------------##
+        # 定义输入占位符
         # input data are edge information of a batch of start, end and the changes
         self.input_x = input_x = tf.placeholder(tf.int32, (batch_size, ))
         self.input_y = input_y = tf.placeholder(tf.int32, (batch_size, ))
@@ -49,7 +50,7 @@ class DynGCN(object):
         self.adj_now = adj_now = tf.placeholder(tf.int32, (node_num, node_num))
         self.delta_adj = delta_adj = tf.placeholder(tf.float32, (node_num, node_num))
         self.feature_h0 = feature_h0 = tf.placeholder(tf.float32, (node_num, hidden_size))
-
+        # 构建模型图
         with tf.device(device), tf.name_scope(mode), tf.variable_scope("DynGCN", reuse=reuse):
 
             self.final_embedding = self.gcn(delta_adj, feature_h0, n_layer, resue_id=0)
@@ -90,6 +91,7 @@ class DynGCN(object):
         #     multi_class_labels=self.input_y,
         #     logits=s_pos
         # )
+        # 定义损失和优化器
         self.cost = cost = loss
 
         # ---------------optimizer---------------#
@@ -113,7 +115,7 @@ class DynGCN(object):
             self.optimizer = tf.no_op()
             self.cost = tf.no_op()
 
-
+    # gcn 方法实现了图卷积网络的核心逻辑。通过多层的图卷积操作，更新节点的特征表示。
     def gcn(self, adj, feature, n_layer=1, resue_id=0):
 
         H0 = feature
@@ -130,7 +132,7 @@ class DynGCN(object):
 
         return H1
 
-
+    # mat_3_2 方法用于处理三维张量和二维张量的矩阵乘法，并调整结果的形状。
     def mat_3_2(self, x, y):
         x1 = tf.reshape(x, (-1, self.hidden_size))
         return tf.reshape(
@@ -138,7 +140,7 @@ class DynGCN(object):
             (self.batch_size, self.max_degree, self.hidden_size)
         )
 
-
+    # weights 方法用于创建和管理图卷积网络中的权重变量。根据变量名和重用标志，创建或获取相应的权重变量。
     def weights(self, name, hidden_size, layer_x, i):
         image_stdv = np.sqrt(1. / (2048))
         hidden_stdv = np.sqrt(1. / (hidden_size))
@@ -172,7 +174,7 @@ class DynGCN(object):
                                         )
 
         return w
-
+    # 更新学习率
     def update_lr(self, session, learning_rate):
         if self.is_training:
             session.run(tf.assign(self.learning_rate, learning_rate))
