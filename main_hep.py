@@ -55,11 +55,19 @@ def run(session, config, model, loader, verbose=False):
             feed = {
                 model.input_x: nodelist1,
                 model.input_y: nodelist2,
-                model.adj_now: adj_now,
+                model.adj_now: adj_now, #将adj_now赋给对应的占位符
                 model.delta_adj: delta_adj,
                 model.feature_h0:feature_h0,
                 model.negative_sample: negative_list
             }
+            print('!!!!!!!!!!!!!!!!!!!!')
+            print(f'model.input_x:{model.input_x}')
+            print(f'model.input_y:{model.input_y}')
+            print(f'model.adj_now:{model.adj_now}')
+            print(f'model.delta_adj:{model.delta_adj}')
+            print(f'model.feature_h0:{model.feature_h0}')
+            print(f'model.negative_sample:{model.negative_sample}')
+            print('*************************')
             out = [model.cost, model.optimizer, model.auc_result,
                    model.auc_opt, model.prediction, model.prediction_n,
                    model.test1, model.test2
