@@ -54,7 +54,7 @@ class DynGCN(object):
         with tf.device(device), tf.name_scope(mode), tf.variable_scope("DynGCN", reuse=reuse):
 
             self.final_embedding = self.gcn(delta_adj, feature_h0, n_layer, resue_id=0)
-
+            print(f'input_x是{input_x},input_y是{input_y}')
             new_embedding_x = tf.nn.embedding_lookup(self.final_embedding, input_x)
             new_embedding_y = tf.nn.embedding_lookup(self.final_embedding, input_y)
             new_embedding_n = tf.nn.embedding_lookup(self.final_embedding, negative_sample)

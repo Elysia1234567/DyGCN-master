@@ -22,7 +22,7 @@ class config_as(object):
     train_step_size = 4 # 20
     valid_batch_size = 128  # 20
     valid_step_size = 4
-    hidden_size = 100  # 512
+    hidden_size = 256  # 512
 
     max_grad_norm = 1
     init_scale = 0.05

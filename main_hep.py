@@ -5,6 +5,8 @@ from datetime import *
 import platform
 import numpy as np
 import tensorflow as tf
+
+
 from util.load_hep import Loader, INFO_LOG
 
 from Config import Config
@@ -14,6 +16,7 @@ from model.dynGCN import DynGCN
 # from model.dynGCN import DynGCN
 from util.evalutate import F1score
 import time
+import json
 
 # 是在给定的会话（session）中运行模型（model），并根据模型的模式（Train 或 Valid）进行训练或验证操作，同时计算并返回相关的性能指标和损失值
 # session：TensorFlow 的会话对象，用于执行计算图中的操作。
@@ -24,6 +27,8 @@ import time
 def run(session, config, model, loader, verbose=False):
     # 记录总损失（total_cost）、处理的批次数量（num_）、AUC 值（auc）、F1 分数计算对象（f1_score）
     # 预测结果列表（prediction_l 和 prediction_n_l）以及临时的 AUC 计算变量（t_auc 和 t_num）
+
+
     total_cost = 0.
 
     num_ = 0.
@@ -49,15 +54,28 @@ def run(session, config, model, loader, verbose=False):
     for batch in loader.generate_batch_data(batchsize=model.batch_size, mode=model.mode):
 
         batch_id, batch_num, nodelist1, nodelist2, negative_list = batch
+        print(f'batch_id是{batch_id},batch_num是{batch_num}')
         #构建输入数据字典 feed，包含节点列表、邻接矩阵等数据，指定要运行的操作列表 out（包括损失、优化器、AUC 结果等）
         #使用会话 session 运行这些操作并获取结果。将预测结果累加到相应的列表中。
         if model.mode == "Train":
             feed = {
                 model.input_x: nodelist1,
                 model.input_y: nodelist2,
+                ######################################################
+                ### 问题主要出在这三行，这三行都是将右边赋给左边的占位符
+                ### 右边的值都可以在load_hep文件中找到（见55行和72行开始的内容）
+                ### 左边的值都可以dynGCN文件中找到（见50行开始的内容）
+                ### 问题产生的原因是，左边占位符的大小都与len(node2id.json)有关，右边的大小则与当前循环中正在读取的图的节点数有关
+                ### 然而node2id.json的大小是固定的，而读取的图的节点数在不断的变化
+                ### 所以现在卡在了如何处理node2id.json
+                ### 我现在的处理方式是，在每次循环前生成node2id.json,然后重新把json赋给loader（见本文件213行）
+                ### 但是loader只初始化一次，而且即便规模匹配上了，它会报错‘indices[0]=9410209 is not in [0,42)’
+                ### 即便我把json文件的键和值互换一下，它还是会报这个错
                 model.adj_now: adj_now, #将adj_now赋给对应的占位符
                 model.delta_adj: delta_adj,
                 model.feature_h0:feature_h0,
+                #######################################################
+
                 model.negative_sample: negative_list
             }
             print('!!!!!!!!!!!!!!!!!!!!')
@@ -191,7 +209,21 @@ def main(_):
         time_consume_t = 0.
         sum_time_consume = 0.
         for epoch in range(config.epoch_num):# epoch_num是100000
-            trainm.update_lr(session, lr_updater.get_lr())#调用 trainm 模型的 update_lr 方法，根据 lr_updater 获取到的当前学习率
+            #####################################################
+            ### 尝试在每次循环时生成json文件
+            G_now=loader.load_graph(loader.present_graph)
+            node_mapping = {node: index for index,node in enumerate(G_now.nodes())}
+            # inverse_node_mapping = {index: node for node, index in node_mapping.items()}
+            node_mapping_str_keys = {str(key): value for key, value in node_mapping.items()}
+            new_dict = {k: int(v) if isinstance(v, np.int64) else v for k, v in node_mapping_str_keys.items()}
+            with open('D:/lunwen/DyGCN Code/DyGCN-master/data/data_hep/node2id.json', 'w',
+                      encoding='utf-8') as json_file:
+                json.dump( new_dict, json_file, ensure_ascii=False, indent=4)
+            with open('D:/lunwen/DyGCN Code/DyGCN-master/data/data_hep/node2id.json', 'r') as f:
+                loader.node2id  = json.load(f)
+            ######################################################
+            trainm.update_lr(session, lr_updater.get_lr())
+            #调用 trainm 模型的 update_lr 方法，根据 lr_updater 获取到的当前学习率
                                                           # 在会话中更新训练模型的学习率。
             # session.run(tf.local_variables_initializer())
             # #

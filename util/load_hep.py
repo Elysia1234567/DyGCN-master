@@ -52,14 +52,18 @@ class Loader(object):
         return G_now
 
     def last_embeddings(self):
+        ######################################################################
         last_date = self.last_date(self.present_graph)
-        file_path = self.embedding_path + 'month_' + str(last_date) + '_graph_embedding.npy'
+        file_path = self.embedding_path + 'month_' + str(last_date+1) + '_graph_embedding.npy'
         try:
             # 以二进制模式打开文件
             with open(file_path, 'rb') as f:
                 load_a = np.load(f)
+                print(f'这里是last_embeddings,现在正在打开{file_path}')
+                print(f'load_a.shape{load_a.shape}')
             # when we generate *.npy [-1] is an zeros vector for placeholder, but now it is unnecessary to exist
-            return load_a[0:-1]
+            return load_a
+        #########################################################################
         except FileNotFoundError:
             print(f"错误: 文件 {file_path} 未找到!")
         except Exception as e:
@@ -67,12 +71,15 @@ class Loader(object):
         return None
 
     def adj(self):
+        ##############################################
         adjj = nx.to_numpy_matrix(self.graph_now)
+        print(f'model通过读取gpickle得到的节点的数量{self.graph_now.number_of_nodes()}')
         present_graph = self.present_graph
         last_date = self.last_date(self.present_graph)
         last_graph = self.load_graph(last_date)
 
         delta_adjj = nx.to_numpy_matrix(self.graph_changes(last_graph, self.graph_now))
+        ####################################################
         # rowsum = np.array(adj.sum(1))
         # d_inv_sqrt = np.power(rowsum, -0.5).flatten()
         # d_inv_sqrt[np.isinf(d_inv_sqrt)] = 0.
